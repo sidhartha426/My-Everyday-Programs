@@ -82,6 +82,17 @@ app.post('/manage-volume', async (req, res) => {
     res.json({ success: true, volume });
 });
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
+});
+
+process.on('SIGINT', () => {
+    console.log('\nServer shutting down...');
+    executeCommand("adb disconnect").then((data)=>{
+        console.log(`From adb: ${data}`);
+        server.close(() => {
+            console.log('Server closed. Goodbye! 👋');
+            process.exit(0);
+        });
+    });
 });
