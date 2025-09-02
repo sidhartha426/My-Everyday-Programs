@@ -1,5 +1,5 @@
 const express = require('express');
-const { exec } = require('child_process'); // Used for executing adb commands
+const { exec, spawn } = require('child_process'); // Used for executing adb commands
 const path = require('path');
 
 const app = express();
@@ -7,14 +7,15 @@ const port = 3000;
 
 //My constants
 
-const getVolumeCommand = ` adb shell "media volume --stream 3 --get" `
-const volumeUpCommand = ` adb shell "input keyevent 24 && media volume --stream 3 --get" `
-const volumeDownCommand = ` adb shell "input keyevent 25 && media volume --stream 3 --get" `
+const getVolumeCommand = ` adb shell "media volume --stream 3 --get" `;
+const volumeUpCommand = ` adb shell "input keyevent 24 && media volume --stream 3 --get" `;
+const volumeDownCommand = ` adb shell "input keyevent 25 && media volume --stream 3 --get" `;
 
 //My functions
 
-const processVolumeString = (volumeString) => ( volumeString.split("\n")[3].split(" ")[3] )
+const processVolumeString = (volumeString) => ( volumeString.split("\n")[3].split(" ")[3] );
 
+/*
 const executeCommand = ( command ) => {
     const request = new Promise((resolve,reject)=>{
         exec(command, (error, stdout, stderr) => {
@@ -27,6 +28,34 @@ const executeCommand = ( command ) => {
     
     return request;
 }
+*/
+
+const executeCommand = (command) => {
+    const request = new Promise((resolve, reject) => {
+        const process = spawn('bash', ['-c', command]);
+
+        let stdout = '';
+        let stderr = '';
+
+        process.stdout.on('data', (data) => {
+            stdout += data.toString();
+        });
+
+        process.stderr.on('data', (data) => {
+            stderr += data.toString();
+        });
+
+        process.on('close', (code) => {
+            if (code !== 0) {
+                reject(stderr);
+            } else {
+                resolve(stdout);
+            }
+        });
+    });
+    return request;
+};
+
 
 const connectDevice = async (ip) => {
     try {
@@ -51,9 +80,9 @@ const setVolume = async (volume) => {
     return resultVolume; 
 }
 
-const getVolume = () => manageVolume(getVolumeCommand)
-const increaseVolume =  () => manageVolume(volumeUpCommand)
-const decreaseVolume =  () => manageVolume(volumeDownCommand)
+const getVolume = () => manageVolume(getVolumeCommand);
+const increaseVolume =  () => manageVolume(volumeUpCommand);
+const decreaseVolume =  () => manageVolume(volumeDownCommand);
 
 // Middleware to parse JSON request bodies
 app.use(express.json());
