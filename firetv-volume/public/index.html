@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fire TV Stick Volume Control</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="favicon.png" type="image/png">
 </head>
 <body>
     <div class="container">
@@ -38,8 +39,12 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    document.getElementById('volumeControl').style.display = 'block';
                     alert(data.message);
+                    document.getElementById('volume').value = data.volume;
+                    document.getElementById('volumeValue').textContent = data.volume;
+                    document.getElementById('volumeControl').style.display = 'block';
+                    document.getElementById('connectBtn').disabled = true;
+                    
                 } else {
                     alert('Connection failed: ' + data.message);
                 }
@@ -50,32 +55,44 @@
         });
 
         function updateVolume(volume) {
-            document.getElementById('volumeValue').innerText = volume;
             fetch('/set-volume', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ volume }),
             })
             .then(response => response.json())
-            .then(data => console.log(data.message))
+            .then(data => {
+                console.log(data.message);
+                document.getElementById('volume').value = data.volume;
+                document.getElementById('volumeValue').textContent = data.volume;
+            })
+            .catch(error => console.error('Error setting volume:', error));
+        }
+        
+        function manageVolume(cmd) {
+            fetch('/manage-volume', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cmd }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data.message);
+                document.getElementById('volume').value = data.volume;
+                document.getElementById('volumeValue').textContent = data.volume;
+            })
             .catch(error => console.error('Error setting volume:', error));
         }
 
         document.getElementById('decreaseVolume').addEventListener('click', () => {
-            let volumeSlider = document.getElementById('volume');
-            let newVolume = Math.max(parseInt(volumeSlider.value) - 1, 0);
-            volumeSlider.value = newVolume;
-            updateVolume(newVolume);
+            manageVolume("decrease");
         });
 
         document.getElementById('increaseVolume').addEventListener('click', () => {
-            let volumeSlider = document.getElementById('volume');
-            let newVolume = Math.min(parseInt(volumeSlider.value) + 1, 15);
-            volumeSlider.value = newVolume;
-            updateVolume(newVolume);
+            manageVolume("increase");
         });
 
-        document.getElementById('volume').addEventListener('input', (event) => {
+        document.getElementById('volume').addEventListener('change', (event) => {
             updateVolume(event.target.value);
         });
     </script>

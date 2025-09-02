@@ -97,3 +97,11 @@ input[type="range"] {
 #volumeValue {
     font-weight: bold;
 }
+
+button:disabled {
+  background-color: #ccc;     /* light grey background */
+  color: #666;                /* dark grey text */
+  border: 1px solid #999;     /* optional border */
+  cursor: not-allowed;        /* visually indicate it's disabled */
+  opacity: 1;                 /* override browser default if needed */
+}
