@@ -1,0 +1,5 @@
+hostapd compile with right flags
+
+update steps.txt to cover all aspects
+
+bash script to automate the process

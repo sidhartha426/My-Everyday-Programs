@@ -1,0 +1,7 @@
+Host docker
+    HostName 172.17.0.3
+    User root
+    IdentityFile "~/auth-keys/docker"
+
+    
+

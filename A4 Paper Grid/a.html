@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FK's Habit Tracking Grid on A4 Paper</title>
+    <style>
+      /* Set the page to landscape A4 size (29.7cm x 21cm) with custom margin */
+
+      :root {
+        --grid-item-border: 0.3mm;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        width: 100vw;
+        background-color: white;
+      }
+
+      .grid-container {
+        width: 297mm; /* Landscape width */
+        height: 210mm; /* Landscape height */
+        display: grid;
+        grid-template-columns: 2cm repeat(27, 1cm) 0.7cm;
+        grid-template-rows: repeat(21, 1cm);
+        gap: 0px; /* No gap between grid items */
+      }
+
+      .grid-item {
+        border: var(--grid-item-border) solid blue; /* Blue grid lines */
+        width: 1cm;
+        height: 1cm;
+        box-sizing: border-box;
+      }
+
+      .grid-item-first {
+        border: var(--grid-item-border) solid white;
+        border-right: var(--grid-item-border) solid blue;
+        width: 2cm;
+        height: 1cm;
+        box-sizing: border-box;
+      }
+      .grid-item-last {
+        border: var(--grid-item-border) solid blue;
+        border-right: var(--grid-item-border) solid white;
+        width: 7mm;
+        height: 10mm;
+        box-sizing: border-box;
+      }
+
+      .grid-item-first-row {
+        border: var(--grid-item-border) solid blue;
+        border-top: var(--grid-item-border) solid white;
+        width: 10mm;
+        height: 10mm;
+        box-sizing: border-box;
+      }
+      .grid-item-last-row {
+        border: var(--grid-item-border) solid blue;
+        border-bottom: var(--grid-item-border) solid white;
+        width: 10mm;
+        height: 10mm;
+        box-sizing: border-box;
+      }
+
+      .grid-item-last-first-row {
+        border: var(--grid-item-border) solid blue;
+        border-right: var(--grid-item-border) solid white;
+        border-top: var(--grid-item-border) solid white;
+        width: 7mm;
+        height: 10mm;
+        box-sizing: border-box;
+      }
+      .grid-item-last-last-row {
+        border: var(--grid-item-border) solid blue;
+        border-right: var(--grid-item-border) solid white;
+        border-bottom: var(--grid-item-border) solid white;
+        width: 7mm;
+        height: 10mm;
+        box-sizing: border-box;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="grid-container">
+      <!-- JavaScript will dynamically add grid items here -->
+    </div>
+
+    <script>
+      // Get the grid container
+      const gridContainer = document.querySelector(".grid-container");
+
+      const [rows, cols] = [21, 29];
+
+      for (let j = 1; j <= cols; j += 1) {
+        const gridItem = document.createElement("div");
+        const gridClass =
+          j > 1 && j < 29
+            ? "grid-item-first-row"
+            : j === 1
+            ? "grid-item-first"
+            : j === 29
+            ? "grid-item-last-first-row"
+            : "";
+        gridItem.classList.add(gridClass);
+        gridContainer.appendChild(gridItem);
+      }
+
+      for (let i = 2; i < rows; i += 1) {
+        for (let j = 1; j <= cols; j += 1) {
+          const gridItem = document.createElement("div");
+          const gridClass =
+            j > 1 && j < 29
+              ? "grid-item"
+              : j === 1
+              ? "grid-item-first"
+              : j === 29
+              ? "grid-item-last"
+              : "";
+          gridItem.classList.add(gridClass);
+          gridContainer.appendChild(gridItem);
+        }
+      }
+      for (let j = 1; j <= cols; j += 1) {
+        const gridItem = document.createElement("div");
+        const gridClass =
+          j > 1 && j < 29
+            ? "grid-item-last-row"
+            : j === 1
+            ? "grid-item-first"
+            : j === 29
+            ? "grid-item-last-last-row"
+            : "";
+        gridItem.classList.add(gridClass);
+        gridContainer.appendChild(gridItem);
+      }
+    </script>
+  </body>
+</html>

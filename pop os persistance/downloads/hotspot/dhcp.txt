@@ -1,0 +1,35 @@
+sudo nano /etc/default/isc-dhcp-server
+INTERFACESv4="wlo1"
+
+sudo ip addr add 192.168.16.254/24 broadcast 192.168.16.255 dev wlo1
+
+sudo nano /etc/dhcp/dhcpd.conf
+
+default-lease-time 600;  # Default lease time (10 minutes)
+max-lease-time 86400;    # Maximum lease time (24 hours)
+min-lease-time 300;      # Minimum lease time (5 minutes)
+
+subnet 192.168.16.0 netmask 255.255.255.0 {
+    range 192.168.16.100 192.168.16.253;
+    option routers 192.168.16.254;
+    option domain-name-servers 1.1.1.1, 1.0.0.1;
+
+    host fk-asus-g531gt {
+        hardware ethernet 38:00:25:2c:89:68;
+        fixed-address 192.168.16.1;
+    }
+    
+    host fk-moto-g73 {
+        hardware ethernet 40:fa:fe:c6:2c:94;
+        fixed-address 192.168.16.2;
+    }
+    
+    host fk-redmi-note-4 {
+        hardware ethernet e4:46:da:a7:1b:a7;
+        fixed-address 192.168.16.3;
+    }
+}
+
+cat /var/lib/dhcp/dhcpd.leases
+
+

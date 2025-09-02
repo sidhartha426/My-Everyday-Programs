@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fire TV Stick Volume Control</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Fire TV Stick Volume Control</h1>
+
+        <div class="input-group">
+            <label for="ip">Enter Fire TV Stick IP:</label>
+            <input type="text" id="ip" placeholder="192.168.x.x">
+            <button id="connectBtn">Connect</button>
+        </div>
+
+        <div class="volume-control" id="volumeControl" style="display: none;">
+            <label for="volume">Volume:</label>
+            <div class="volume-wrapper">
+                <button id="decreaseVolume">-</button>
+                <input type="range" id="volume" min="0" max="15" step="1" value="5">
+                <button id="increaseVolume">+</button>
+            </div>
+            <span id="volumeValue">5</span>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('connectBtn').addEventListener('click', () => {
+            const ip = document.getElementById('ip').value;
+            fetch('/connect', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ip }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('volumeControl').style.display = 'block';
+                    alert(data.message);
+                } else {
+                    alert('Connection failed: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error connecting to Fire TV Stick');
+            });
+        });
+
+        function updateVolume(volume) {
+            document.getElementById('volumeValue').innerText = volume;
+            fetch('/set-volume', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ volume }),
+            })
+            .then(response => response.json())
+            .then(data => console.log(data.message))
+            .catch(error => console.error('Error setting volume:', error));
+        }
+
+        document.getElementById('decreaseVolume').addEventListener('click', () => {
+            let volumeSlider = document.getElementById('volume');
+            let newVolume = Math.max(parseInt(volumeSlider.value) - 1, 0);
+            volumeSlider.value = newVolume;
+            updateVolume(newVolume);
+        });
+
+        document.getElementById('increaseVolume').addEventListener('click', () => {
+            let volumeSlider = document.getElementById('volume');
+            let newVolume = Math.min(parseInt(volumeSlider.value) + 1, 15);
+            volumeSlider.value = newVolume;
+            updateVolume(newVolume);
+        });
+
+        document.getElementById('volume').addEventListener('input', (event) => {
+            updateVolume(event.target.value);
+        });
+    </script>
+</body>
+</html>

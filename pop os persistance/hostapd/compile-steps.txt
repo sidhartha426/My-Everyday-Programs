@@ -1,0 +1,19 @@
+sudo apt update
+sudo apt install build-essential libnl-3-dev libnl-genl-3-dev pkg-config git libssl-dev
+
+
+
+git clone https://w1.fi/hostap.git
+cd hostap/hostapd
+cp defconfig .config
+echo "CONFIG_IEEE80211AX=y" >> .config
+make -j$(nproc)
+
+
+
+
+
+cd hostap/hostapd
+make clean
+make -j$(nproc)
+

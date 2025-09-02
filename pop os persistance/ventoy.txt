@@ -1,0 +1,9 @@
+1. Create Persistent Data Files
+
+	sudo bash CreatePersistentImg.sh  -s 4608 -t ext4 -l casper-rw -o pop-os-intel.dat
+	sudo bash CreatePersistentImg.sh  -s 4608 -t ext4 -l casper-rw -o pop-os-nvidia.dat
+	
+2. Set configuration file using VentoyPlugson
+
+	sudo bash ./VentoyPlugson.sh /dev/sda
+

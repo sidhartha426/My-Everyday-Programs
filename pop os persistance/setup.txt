@@ -1,0 +1,108 @@
+1. User Creation
+
+    sudo apt install gnome-tweaks
+	setup (power, terminal, text editor, bashrc)
+	
+	Create a admin user using settings ( It will create a user with id 1000 )
+	Logout the live user and login into created user
+	set password for the root user
+
+	
+2. Installing necessry packages
+	
+	#Repo Setup
+	
+	Copy .list files and .asc files to respective folders in /etc/apt
+	
+	#Node.js LTS repo setup
+	curl -fsSL https://deb.nodesource.com/setup_lts.x -o nodesource_setup.sh
+	sudo -E bash nodesource_setup.sh
+	sudo add-apt-repository ppa:unit193/encryption -y
+	
+	
+	sudo apt update
+	sudo apt install ubuntu-restricted-extras aria2 tumbler gstreamer1.0-plugins-bad gstreamer1.0-plugins-rtp dbus-x11   openssh-server    samba    gnome-tweaks    vlc   filezilla   ncdu   neofetch    ffmpeg     exfatprogs  dosfstools  mtools nautilus-gtkhash  nautilus-admin  
+
+
+	#Docker
+	
+	sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+	
+	sudo apt install code nodejs veracrypt
+	
+	# For KVM/QeMu supported virualization
+	
+	sudo apt -y install bridge-utils cpu-checker libvirt-clients libvirt-daemon qemu qemu-kvm virt-manager
+
+	kvm-ok
+	
+	# For wifi hotspot
+	
+	sudo apt install iw hostapd isc-dhcp-server
+	
+	
+	sudo apt install ubuntu-restricted-extras tumbler gstreamer1.0-plugins-bad gstreamer1.0-plugins-rtp  aria2 dbus-x11   openssh-server    samba        vlc   filezilla   ncdu   neofetch    ffmpeg     exfatprogs  dosfstools mtools nautilus-gtkhash  nautilus-admin     docker-ce  docker-ce-cli  containerd.io  docker-buildx-plugin  docker-compose-plugin   bridge-utils  cpu-checker  libvirt-clients  libvirt-daemon qemu  qemu-kvm  virt-manager  code  nodejs   veracrypt iw hostapd isc-dhcp-server
+	
+	
+3. Set SMB
+	
+	sudo smbpasswd -a sidhartha426
+	Write necessary config to /etc/samba/smb.conf
+	
+4. Set SSH
+
+	write/edit  '~/.ssh/config' file
+	
+5. Set UFW firewall rules
+	
+	sudo ufw enable
+	sudo ufw allow from 192.168.0.0/16 
+	sudo ufw allow from 172.16.0.0/12 
+	sudo ufw status
+	
+6. Docker,KVM,QeMu post installation
+
+	su
+	usermod -aG docker sidhartha426
+	usermod -aG libvirt sidhartha426
+	usermod -aG kvm sidhartha426
+	
+7. Check Status of services
+
+	sudo systemctl status containerd.service
+	sudo systemctl status docker.service
+	sudo systemctl status ssh
+	sudo systemctl status smbd
+	sudo systemctl status libvirtd
+	
+8. Configure other settings
+
+	Mozilla and Chrome Settings
+	
+	Terminal Settings
+	Power Settings ( Auto Suspend , Battery Percentage )
+	Tweaks ( Show Seconds , Suspend on Lid CLose , Maximize Button , Show Day)
+	Dock Settings
+	Setting Favourite Applications on Dock
+	Text Editor Settings , File Manager Settings
+	
+	Settings on mouse pad ( No natural scrolling )
+	
+	~/.bashrc
+	
+	alias ps1='export PS1="[\[\033[01;32m\]\u\[\033[00m\]: \[\033[01;34m\]\W\[\033[00m\]]\$ "'
+	PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]$(if [ "$PWD" = "$HOME" ]; then echo "~"; else basename "$PWD"; fi)\[\033[00m\]\$ '  
+	export NODE_PATH=$(npm root -g) 
+
+	
+	Edit live user settings
+	Filezilla Bookmarks Set
+	VSCode title bar change
+	Set VLC as Default player
+	Build alpine-ssh docker image
+	set up git configurations and veracrypt
+	
+	
+	
+    git config --global user.email "sidharthasankarswain425@gmail.com"
+    git config --global user.name "Sidhartha Sankar Swain"
