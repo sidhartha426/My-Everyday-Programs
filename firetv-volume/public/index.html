@@ -45,44 +45,58 @@
                     document.getElementById('volumeValue').textContent = data.volume;
                     document.getElementById('volumeControl').style.display = 'block';
                     document.getElementById('connectBtn').disabled = true;
+                    document.getElementById('ip').readOnly = true;
                     
                 } else {
-                    alert('Connection failed: ' + data.message);
+                    alert('Connection failed: \n' + data.error);
+                    console.error(data.error);
+                    console.log(data);
                 }
             })
             .catch(error => {
                 alert('Error connecting to Fire TV Stick');
+                console.error('Error connecting device:\n', error)
             });
         });
 
         function updateVolume(volume) {
+            const ip = document.getElementById('ip').value;
             fetch('/set-volume', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ volume }),
+                body: JSON.stringify({ volume, ip }),
             })
             .then(response => response.json())
             .then(data => {
-                console.log(data.message);
+                if(!data.success){
+                    console.error(data.error);
+                    console.log(data);
+                    return;
+                }
                 document.getElementById('volume').value = data.volume;
                 document.getElementById('volumeValue').textContent = data.volume;
             })
-            .catch(error => console.error('Error setting volume:', error));
+            .catch(error => console.error('Error setting volume:\n', error));
         }
         
         function manageVolume(cmd) {
+            const ip = document.getElementById('ip').value;
             fetch('/manage-volume', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ cmd }),
+                body: JSON.stringify({ cmd, ip }),
             })
             .then(response => response.json())
             .then(data => {
-                console.log(data.message);
+                if(!data.success){
+                    console.error(data.error);
+                    console.log(data);
+                    return;
+                }
                 document.getElementById('volume').value = data.volume;
                 document.getElementById('volumeValue').textContent = data.volume;
             })
-            .catch(error => console.error('Error setting volume:', error));
+            .catch(error => console.error('Error setting volume:\n', error));
         }
 
         document.getElementById('decreaseVolume').addEventListener('click', () => {

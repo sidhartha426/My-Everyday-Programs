@@ -4,15 +4,16 @@ const path = require('path');
 
 const app = express();
 const port = 3000;
+const adbPort = 5555;
 
 //My constants
 
-const getVolumeCommand = ` adb shell "media volume --stream 3 --get" `;
-const volumeUpCommand = ` adb shell "input keyevent 24 && media volume --stream 3 --get" `;
-const volumeDownCommand = ` adb shell "input keyevent 25 && media volume --stream 3 --get" `;
+const getVolumeCommand = ` shell "media volume --stream 3 --get" `;
+const volumeUpCommand = ` shell "input keyevent 24 && media volume --stream 3 --get" `;
+const volumeDownCommand = ` shell "input keyevent 25 && media volume --stream 3 --get" `;
 
 //My functions
-
+const connectString = (ip, port=adbPort) => (`adb -s ${ip}:${port} `);
 const processVolumeString = (volumeString) => ( volumeString.split("\n")[3].split(" ")[3] );
 
 /*
@@ -32,83 +33,127 @@ const executeCommand = ( command ) => {
 
 const executeCommand = (command) => {
     const request = new Promise((resolve, reject) => {
-        const process = spawn('bash', ['-c', command]);
+        const myProcess = spawn('bash', ['-c', command]);
 
         let stdout = '';
         let stderr = '';
 
-        process.stdout.on('data', (data) => {
+        myProcess.stdout.on('data', (data) => {
             stdout += data.toString();
         });
 
-        process.stderr.on('data', (data) => {
+        myProcess.stderr.on('data', (data) => {
             stderr += data.toString();
         });
 
-        process.on('close', (code) => {
+        myProcess.on('close', (code) => {
+            
+            /*
+            console.log("Start From executeCommand")
+            console.log(command);
+            console.log(stdout);
+            console.error("stderr",stderr);
+            console.log("Stop executeCommand")
+            */
+            
             if (code !== 0) {
                 reject(stderr);
             } else {
                 resolve(stdout);
             }
         });
+        
+        myProcess.on('error', (err) => {
+            reject(err);
+        });
+        
     });
     return request;
 };
 
 
-const connectDevice = async (ip) => {
+const connectDevice = async (ip, port=adbPort) => {
     try {
-        const output = await executeCommand(`adb connect ${ip}:5555`);
-        return !output.includes("fail");
+        const output = await executeCommand(`adb connect ${ip}:${port}`);
+        return [ output.includes("connected"), output];
     } 
     catch (err) {
-        return err;
+        throw new Error(err);
     }
 }
 
-const manageVolume = async (command) => {
-    const commandOutput = await executeCommand(command);
-    const volume = processVolumeString(commandOutput);
-    return volume;   
+const manageVolume = async (command, ip, port=adbPort) => {
+    try {
+        const commandOutput = await executeCommand(`${connectString(ip, port)} ${command}`);
+        const volume = processVolumeString(commandOutput);
+        return volume;
+    }
+    catch (err) {
+        throw new Error(err);
+    }
 }
 
-const setVolume = async (volume) => {
-    const setVolumeCommand = `adb shell "media volume --stream 3 --set ${volume} > /dev/null && media volume --stream 3 --get" `;
-    const commandOutput = await executeCommand(setVolumeCommand);
-    const resultVolume = processVolumeString(commandOutput);
-    return resultVolume; 
+const setVolume = async (volume, ip, port=adbPort) => {
+    try {
+        const setVolumeCommand = `${connectString(ip, port)} shell "media volume --stream 3 --set ${volume} > /dev/null && media volume --stream 3 --get" `;
+        const commandOutput = await executeCommand(setVolumeCommand);
+        const resultVolume = processVolumeString(commandOutput);
+        return resultVolume;
+    }
+    catch (err) {
+        throw new Error(err);
+    }  
 }
 
-const getVolume = () => manageVolume(getVolumeCommand);
-const increaseVolume =  () => manageVolume(volumeUpCommand);
-const decreaseVolume =  () => manageVolume(volumeDownCommand);
+const getVolume = (ip) => manageVolume(getVolumeCommand, ip);
+const increaseVolume =  (ip) => manageVolume(volumeUpCommand, ip);
+const decreaseVolume =  (ip) => manageVolume(volumeDownCommand, ip);
 
 // Middleware to parse JSON request bodies
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Handle ADB connection
-app.post('/connect', async (req, res) => {
+app.post('/connect', async (req, res, next) => {
     const { ip } = req.body;
     const result = await connectDevice(ip);
-    if(!result)
-        return res.status(500).json({ success: false, message: 'Unable to connect to Fire TV Stick!' });
-    const volume = await getVolume();
-    res.json({ success: true, message: 'Connected to Fire TV Stick!', volume });
+    if(!result[0])
+        return res.status(500).json({ success:false, error:result[1] });
+    try{
+        const volume = await getVolume(ip);
+        res.json({ success:true, message: 'Connected to Fire TV Stick!', volume });
+    }
+    catch (err){
+        next(err);
+    }
 });
 
 // Handle volume change
-app.post('/set-volume', async (req, res) => {
-    const { volume } = req.body;
-    const resultVolume = await setVolume(volume);
-    res.json({ success: true, volume:resultVolume });
+app.post('/set-volume', async (req, res, next) => {
+    const { volume, ip } = req.body;
+    try{
+        const resultVolume = await setVolume(volume, ip);
+        res.json({ success:true, volume:resultVolume });
+    }
+    catch (err){
+        next(err);
+    }
 });
 
-app.post('/manage-volume', async (req, res) => {
-    const { cmd } = req.body;
-    const volume = (cmd==="increase") ? await increaseVolume() : await decreaseVolume();
-    res.json({ success: true, volume });
+app.post('/manage-volume', async (req, res, next) => {
+    const { cmd, ip } = req.body;
+    try{
+        const volume = (cmd==="increase") ? await increaseVolume(ip) : await decreaseVolume(ip);
+        res.json({ success:true, volume });
+    }
+    catch (err){
+        next(err);
+    }   
+});
+
+app.use((err, req, res, next) => {
+    console.error('Caught error:', err.stack);
+    res.status(500).json({ success:false, error:err.message });
 });
 
 const server = app.listen(port, () => {
@@ -119,6 +164,13 @@ process.on('SIGINT', () => {
     console.log('\nServer shutting down...');
     executeCommand("adb disconnect").then((data)=>{
         console.log(`From adb: ${data}`);
+        server.close(() => {
+            console.log('Server closed. Goodbye! 👋');
+            process.exit(0);
+        });
+    })
+    .catch((err)=>{
+        console.error(err);
         server.close(() => {
             console.log('Server closed. Goodbye! 👋');
             process.exit(0);
