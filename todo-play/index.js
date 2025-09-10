@@ -26,7 +26,8 @@ app.get('/api/data', (req, res) => {
 // Route to update the JSON file
 app.post('/api/update', (req, res) => {
   const updatedData = req.body;
-  
+  const data = readData();
+  updatedData.clear = updatedData.clear.concat(data.clear);
   fs.writeFileSync(dataFilePath, JSON.stringify(updatedData, null, 2));
   res.status(200).send('Data updated successfully');
 });

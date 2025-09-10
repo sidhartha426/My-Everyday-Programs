@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const response = await fetch('/api/data');
     data = await response.json();
     data.search = [];
+    data.clear = [];
     renderLists();
     /*
     for(let i=0;i<data.remaining.length;i+=1){
@@ -75,8 +76,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const filteredItems = data.remaining.filter(item => item.toLowerCase().includes(query));
     data.search =  filteredItems;
     
-    const orientation = screen.orientation || screen.mozOrientation || screen.msOrientation;
-    const {d, dd, u, uu} = (orientation.type.startsWith('portrait')) ? portraitArrow : landscapeArrow;
+    const orientation = getLogicalOrientation();
+    const {d, dd, u, uu} = (orientation === 'portrait') ? portraitArrow : landscapeArrow;
     
     const title = (filteredItems.length === data.remaining.length)? 'Remaining' : 'Search Results';
     document.getElementById('remaining').querySelector('h3').textContent = `${title} ( ${filteredItems.length} )`
@@ -195,18 +196,26 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('remaining').querySelector('h3').textContent = 'Remaining';
     renderLists();
   });
-  
+  document.getElementById('clearDoneButton').addEventListener('click', () => {
+    data.clear = data.clear.concat(data.done);
+    data.done = [];
+    document.getElementById('search').value = '';
+    document.getElementById('remaining').querySelector('h3').textContent = 'Remaining';
+    renderLists();
+  });
 
   // Update data on the server
   document.getElementById('updateButton').addEventListener('click', async () => {
     const userConfirmed = confirm("Are you sure you want to proceed?");
     if(!userConfirmed) return;
+    
+    const { remaining, list, done, clear } = data;
     const response = await fetch('/api/update', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify({ remaining, list, done, clear }),
     });
 
     if (response.ok) {
