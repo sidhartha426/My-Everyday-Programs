@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FK's List</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="favicon.png" type="image/png">
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+</head>
+<body>
+  <div class="container">
+    <h1>Manage Your Play</h1>
+
+    <div class="search">
+      <input type="text" id="search" placeholder="Search in 'remaining'...">
+    </div>
+
+    <div class="lists">
+      <div class="list" id="remaining" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <div class="list-header">
+          <h3>Remaining</h3>
+        </div>
+        <ul id="remainingList"></ul>
+      </div>
+      <div class="list" id="list" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <div class="list-header">
+          <h3>List</h3>
+        </div>
+        <ul id="listList"></ul>
+      </div>
+      <div class="list" id="done" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <div class="list-header">
+          <h3>Done</h3>
+        </div>
+        <ul id="doneList"></ul>
+      </div>
+    </div>
+    
+    <div class="buttons">
+      <button id="randomizeButton">Random</button>
+      <button id="moveListButton">Move List</button>
+      <button id="moveDoneButton">Move Done</button>
+      <button id="refreshButton">Refresh</button>
+      <button id="updateButton">Update</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
+

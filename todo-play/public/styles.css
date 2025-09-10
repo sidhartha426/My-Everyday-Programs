@@ -1,0 +1,152 @@
+/* General Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.container {
+  /* max-width: 600px; */
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.search input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+button {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  font-size: 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 10px;
+}
+
+button:hover {
+  background-color: #218838;
+}
+
+.lists {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+  flex-direction: column;
+}
+
+.list {
+  width: 30%;
+  background-color: #f8f9fa;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  height: 500px; /* Limit height to show 10 items */
+  overflow-y: auto; /* Enable vertical scrolling */
+  width: 100%;
+}
+
+.list ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.list li {
+  background-color: #ffffff;
+  margin: 5px 0;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  user-select: none;
+}
+
+.list li div:nth-child(1){
+  flex:1;
+  white-space:normal;
+  word-wrap:break-word;
+  overflow-wrap:break-word;
+  width:100%;
+  margin-bottom: 10px;
+}
+
+.list li div:nth-child(2){
+  display: flex;
+  justify-content: space-between;
+  width:100%;
+}
+
+.list li:hover {
+  background-color: #e2e6ea;
+}
+
+.list li button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 5px;
+  margin-top: 10px;  /* Space the button below the item */
+  border-radius: 5px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.list li button:hover {
+  background-color: #0056b3;
+}
+
+.list li button.small-btn {
+  font-size: 18px;
+  padding: 4px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  margin: 5px 0; /* Add spacing between the buttons */
+}
+
+.buttons{
+  display:flex;
+  flex-direction: column;
+}
+
+.buttons button{
+  width:100%;
+}
+
+
+@media screen and (orientation: landscape) {
+  .lists,.buttons {
+    flex-direction: row;
+  }
+  .buttons button{
+    margin:10px;
+  }
+}
+
+
