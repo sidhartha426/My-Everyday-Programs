@@ -6,9 +6,9 @@ def read_file_to_json_array(filename, json_filename):
     with open(filename, 'r') as file:
         # Read all lines and strip any surrounding whitespace (like newlines)
         lines = [line.strip() for line in file.readlines() if line.strip()]
-    
+
     # Convert the list of lines into a JSON string array
-    json_data = json.dumps({"remaining":lines,"list":[],"done":[]}, indent=4)
+    json_data = json.dumps({"remaining":lines, "list":[], "done":[], "clear":[]}, indent=4)
 
     # Write the JSON data to a file
     with open(json_filename, 'w') as json_file:
