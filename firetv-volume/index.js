@@ -1,6 +1,10 @@
-const express = require('express');
-const { exec, spawn } = require('child_process'); // Used for executing adb commands
-const path = require('path');
+import express from 'express';
+import { spawn, exec } from 'node:child_process'; // Used for executing adb commands
+import path from 'node:path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const port = 3000;
