@@ -2,6 +2,8 @@ import express from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'url';
+import { getLocalIpAddress } from './ip.js';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -39,6 +41,9 @@ app.post('/api/update', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+  
+  const ip = getLocalIpAddress() ? getLocalIpAddress() : "localhost";
+  console.log(`Server running on http://${ip}:${port}`);
+  
 });
 

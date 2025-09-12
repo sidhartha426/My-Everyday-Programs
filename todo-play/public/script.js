@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderLists();
   });
   document.getElementById('clearDoneButton').addEventListener('click', () => {
-    data.clear = data.clear.concat(data.done);
+    data.clear = data.done.concat(data.clear);
     data.done = [];
     document.getElementById('search').value = '';
     document.getElementById('remaining').querySelector('h3').textContent = 'Remaining';
@@ -223,6 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       alert('Failed to update data!');
     }
+    data.clear = [];
   });
   
   document.getElementById('refreshButton').addEventListener('click', () => {
