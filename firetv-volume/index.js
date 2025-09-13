@@ -53,30 +53,31 @@ const executeCommand = (command) => {
         });
 
         myProcess.on('close', (code) => {
-            
+
             /*
             console.log('Start From executeCommand');
             console.log(command);
-            console.log(stdout);
-            console.error('stderr',stderr);
+            console.log('stdout:\n',stdout);
+            console.error('stderr:\n',stderr);
+            console.log('status code:',code);
             console.log('Stop executeCommand');
             */
-            
-            if (code !== 0) {
-                const myError = new Error('Error while executing command');
+
+            if (code !== 0 || stderr !== '') {
+                const myError = new Error('Error on executing command');
                 myError.context = {stdout, stderr, statusCode:code};
                 reject(myError);
             } else {
                 resolve(stdout);
             }
         });
-        
+
         myProcess.on('error', (cmdErr) => {
             const myError = new Error('Unable to execute command');
             myError.context = {stdout, stderr, cmdErr};
             reject(myError);
         });
-        
+
     });
     return request;
 };
@@ -169,7 +170,7 @@ app.use((err, req, res, next) => {
 
 const server = app.listen(port, () => {
   
-  const ip = getLocalIpAddress() ? getLocalIpAddress() : "localhost";
+  const ip = getLocalIpAddress() ? getLocalIpAddress() : 'localhost';
   console.log(`Server running on http://${ip}:${port}`);
   
 });
