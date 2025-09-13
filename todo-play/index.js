@@ -4,34 +4,27 @@ import path from 'node:path';
 import { fileURLToPath } from 'url';
 import { getLocalIpAddress } from './ip.js';
 
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 
 const app = express();
 const port = 4000;
 
-// Middleware to serve static files (CSS, JS, HTML)
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
-// Path to the JSON file
 const dataFilePath = path.join(__dirname, 'data.json');
 
-// Helper function to read JSON data
 const readData = () => {
   const rawData = fs.readFileSync(dataFilePath);
   return JSON.parse(rawData);
 };
 
-// Route to serve the data from JSON file
 app.get('/api/data', (req, res) => {
   const data = readData();
   res.json(data);
 });
 
-// Route to update the JSON file
 app.post('/api/update', (req, res) => {
   const updatedData = req.body;
   const data = readData();
@@ -42,7 +35,7 @@ app.post('/api/update', (req, res) => {
 
 app.listen(port, () => {
   
-  const ip = getLocalIpAddress() ? getLocalIpAddress() : "localhost";
+  const ip = getLocalIpAddress() ? getLocalIpAddress() : 'localhost';
   console.log(`Server running on http://${ip}:${port}`);
   
 });
