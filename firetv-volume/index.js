@@ -4,7 +4,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'url';
 import { getLocalIpAddress } from './ip.js';
 
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -12,13 +11,10 @@ const app = express();
 const port = 3000;
 const adbPort = 5555;
 
-//My constants
-
 const getVolumeCommand = ` shell "media volume --stream 3 --get" `;
 const volumeUpCommand = ` shell "input keyevent 24 && media volume --stream 3 --get" `;
 const volumeDownCommand = ` shell "input keyevent 25 && media volume --stream 3 --get" `;
 
-//My functions
 const connectString = (ip, port=adbPort) => (`adb -s ${ip}:${port} `);
 const processVolumeString = (volumeString) => ( volumeString.split('\n')[3].split(' ')[3] );
 
@@ -39,10 +35,12 @@ const executeCommand = ( command ) => {
 
 const executeCommand = (command) => {
     const request = new Promise((resolve, reject) => {
-        const myProcess = spawn('bash', ['-c', command]);
+        const myProcess = spawn('bash', []);
 
         let stdout = '';
         let stderr = '';
+        myProcess.stdin.write(command);
+        myProcess.stdin.end();
 
         myProcess.stdout.on('data', (data) => {
             stdout += data.toString();
@@ -120,11 +118,11 @@ const getVolume = (ip) => manageVolume(getVolumeCommand, ip);
 const increaseVolume =  (ip) => manageVolume(volumeUpCommand, ip);
 const decreaseVolume =  (ip) => manageVolume(volumeDownCommand, ip);
 
-// Middleware to parse JSON request bodies
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Handle ADB connection
+
 app.post('/connect', async (req, res, next) => {
     const { ip } = req.body;
     try{
@@ -139,7 +137,7 @@ app.post('/connect', async (req, res, next) => {
     }
 });
 
-// Handle volume change
+
 app.post('/set-volume', async (req, res, next) => {
     const { volume, ip } = req.body;
     try{
