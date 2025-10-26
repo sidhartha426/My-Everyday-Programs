@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>21-Day Challenge Tracker</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>21-Day Sessions Tracker</h1>
+    </header>
+
+    <section class="controls card">
+      <div class="row">
+        <label>Start date
+          <input id="startDate" type="date">
+        </label>
+        <label>Ideal sessions / day
+          <input id="idealPerDay" type="number" min="1" value="10">
+        </label>
+      </div>
+      <div class="row buttons">
+        <button id="buildBtn">Build 21-day table</button>
+        <button id="exportPdf">Export PDF</button>
+        <button id="resetBtn" class="danger">Reset</button>
+      </div>
+    </section>
+
+    <section id="tableWrap" class="card" aria-live="polite">
+      <div id="tableContainer"></div>
+    </section>
+
+    <footer>
+      <small>Data saved to server as JSON. Changes autosave.</small>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
