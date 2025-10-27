@@ -94,7 +94,7 @@ function renderTable() {
     const pctStr = r.dayCompleted ? pct.toFixed(2) + '%' : '–';
 
     html += `<tr data-idx="${idx}">
-      <td>Day ${dayNum}</td>
+      <td>Day ${String(dayNum).padStart(2, '0')}</td>
       <td>${r.date}</td>
       <td>
         <input class="row-session" type="number" min="0" step="1"

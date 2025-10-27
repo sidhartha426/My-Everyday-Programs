@@ -8,6 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const DATA_FILE = path.join(__dirname, 'data.json');
+const PORT = process.env.PORT || 3000;
 const app = express();
 
 app.use(express.json());
@@ -138,7 +139,7 @@ app.get("/api/export-pdf", (req, res) => {
         : "–";
 
       const values = [
-        `Day ${r.day}`,
+        `Day ${String(r.day).padStart(2, '0')}`,
         r.date,
         r.sessionsCompleted,
         r.dayCompleted ? cumulative : "–",
@@ -189,13 +190,12 @@ app.get("/api/export-pdf", (req, res) => {
 });
 
 
-// --- FALLBACK FRONTEND ---
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // --- START SERVER ---
-const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () =>
   console.log(`✅ Server running on http://localhost:${PORT}`)
 );
