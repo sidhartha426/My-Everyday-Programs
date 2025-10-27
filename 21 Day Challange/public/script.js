@@ -17,7 +17,12 @@ function fetchData() {
       if (state.config) {
         startDateInput.value = state.config.startDate;
         idealPerDayInput.value = state.config.idealPerDay;
-        buildTable(state.config.startDate, state.config.idealPerDay, state.rows);
+        //buildTable(state.config.startDate, state.config.idealPerDay, state.rows);
+        renderTable();
+        buildBtn.disabled = true;
+      }
+      else {
+        resetBtn.disabled = true;
       }
     })
     .catch(e => console.error('Failed to fetch data', e));
@@ -184,6 +189,8 @@ buildBtn.addEventListener('click', () => {
     return;
   }
   buildTable(sd, ideal);
+  buildBtn.disabled = true;
+  resetBtn.disabled = false;
 });
 
 resetBtn.addEventListener('click', () => {
@@ -192,6 +199,8 @@ resetBtn.addEventListener('click', () => {
     .then(r => r.json())
     .then(() => {
       state = { config: null, rows: [] };
+      buildBtn.disabled = false;
+      resetBtn.disabled = true;
       startDateInput.value = '';
       tableContainer.innerHTML =
         '<p class="small">Reset complete. Build a new table to begin.</p>';
