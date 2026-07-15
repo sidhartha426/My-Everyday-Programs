@@ -1,0 +1,7 @@
+sqlite3 vw-data/db.sqlite3
+
+.system clear
+
+PRAGMA integrity_check;
+
+SELECT uuid,name,atype FROM devices

@@ -1,0 +1,40 @@
+{$DOMAIN} {
+    # --------------------------------------------------------
+    # LET'S ENCRYPT CONFIGURATION
+    # --------------------------------------------------------
+    tls {$EMAIL} {
+        # DEVIL'S ADVOCATE TIP: 
+        # If your DNS is still propagating, UNCOMMENT the line below to use 
+        # the staging server so you don't get rate-limited during testing.
+        # Once testing is done, comment it out and restart Caddy.
+        #ca https://acme-staging-v02.api.letsencrypt.org/directory
+        dns porkbun {
+            api_key {env.PORKBUN_API_KEY}
+            api_secret_key {env.PORKBUN_API_SECRET_KEY}
+        }
+    }
+
+    # Compress responses to save bandwidth on the free tier
+    encode gzip
+
+    # --------------------------------------------------------
+    # EDGE SECURITY HEADERS
+    # --------------------------------------------------------
+    header {
+        # Hide the server signature from automated scanner bots
+        -Server
+
+        # Enforce HTTPS strictly for 1 year (HSTS)
+        Strict-Transport-Security "max-age=31536000;"
+        
+        # Prevent MIME-sniffing attacks
+        X-Content-Type-Options "nosniff"
+    }
+
+    # --------------------------------------------------------
+    # REVERSE PROXY
+    # --------------------------------------------------------
+    # Vaultwarden version 1.30.0+ natively handles WebSockets on port 80.
+    # Caddy v2 proxies WebSockets automatically, so no extra config is needed here.
+    reverse_proxy vaultwarden:80
+}

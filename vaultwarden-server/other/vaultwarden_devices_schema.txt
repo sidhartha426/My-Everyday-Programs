@@ -1,0 +1,75 @@
+Vaultwarden (1.36.0) SQLite3 'devices' Table Schema & atype Mappings
+
+================================================================================
+1. DEVICES TABLE SCHEMA
+================================================================================
+
+CREATE TABLE devices (
+    uuid TEXT PRIMARY KEY NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    user_uuid TEXT NOT NULL,
+    name TEXT NOT NULL,
+    atype INTEGER NOT NULL,
+    push_token TEXT,
+    push_uuid TEXT,
+    refresh_token TEXT NOT NULL,
+    twofactor_remember TEXT,
+    FOREIGN KEY(user_uuid) REFERENCES users(uuid)
+);
+
+Column Breakdown:
+- uuid: The unique identifier for the device (Primary Key).
+- created_at / updated_at: Timestamps tracking the lifecycle of the device registration.
+- user_uuid: The foreign key linking this device to the user who owns it. 
+- name: A user-friendly string identifying the device (e.g., "John's iPhone", "Chrome Desktop").
+- atype: The integer representing the application/device type.
+- push_token / push_uuid: Used for live sync and WebSockets.
+- refresh_token: The OAuth2 refresh token used by the client to get new access tokens.
+- twofactor_remember: A token stored if the user checks "Remember me" during a 2FA prompt.
+
+================================================================================
+2. ATYPE (APPLICATION TYPE) MAPPINGS
+================================================================================
+
+Mobile Apps
+---------------------------------
+0  - Android
+1  - iOS
+15 - Android (Amazon Appstore)
+
+Browser Extensions
+---------------------------------
+2  - Google Chrome Extension
+3  - Mozilla Firefox Extension
+4  - Opera Extension
+5  - Microsoft Edge Extension
+19 - Vivaldi Extension
+20 - Apple Safari Extension
+
+Desktop Applications
+---------------------------------
+6  - Windows Desktop
+7  - macOS Desktop
+8  - Linux Desktop
+16 - Windows UWP (Universal Windows Platform)
+
+Web Vault (Browsers)
+---------------------------------
+9  - Google Chrome Browser
+10 - Mozilla Firefox Browser
+11 - Opera Browser
+12 - Microsoft Edge Browser
+13 - Internet Explorer
+14 - Unknown Browser
+17 - Apple Safari Browser
+18 - Vivaldi Browser
+26 - DuckDuckGo Browser
+
+Command Line & Development Tools
+---------------------------------
+21 - SDK
+22 - Server
+23 - Windows CLI
+24 - macOS CLI
+25 - Linux CLI

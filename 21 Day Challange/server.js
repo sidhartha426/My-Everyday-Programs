@@ -1,5 +1,5 @@
 import express from 'express';
-import 'dotenv/config';
+import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 import PDFDocument from 'pdfkit';
@@ -7,6 +7,16 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const envPath = (process.env.ENV_PATH) ? process.env.ENV_PATH : (process.env.NODE_ENV) ?`.env.${process.env.NODE_ENV}` : '.env' ;  
+
+dotenv.config({
+  path: envPath,
+  debug: false,
+  quiet: true
+});
+
+// console.log(envPath);
 
 const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data.json');
 const PORT = process.env.PORT || 3000;
@@ -37,6 +47,16 @@ app.get('/api/data', (req, res) => {
 
 app.post('/api/save', (req, res) => {
   try {
+    const {rows} = req.body;
+    const firstIncomplete = rows.findIndex(r => !r.dayCompleted);
+    if (firstIncomplete > 0){
+      const {day, date} = rows[firstIncomplete-1];
+      console.log(`${String(day).padStart(2, '0')} ${date} data saved.`);
+    }
+    else if(rows[20].dayCompleted){
+      const {day, date} = rows[20];
+      console.log(`${String(day).padStart(2, '0')} ${date} data saved.`);
+    } 
     fs.writeFileSync(DATA_FILE, JSON.stringify(req.body, null, 2));
     res.json({ ok: true });
   } catch (e) {
