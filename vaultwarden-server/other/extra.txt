@@ -1,0 +1,55 @@
+
+sudo apt-get purge google-cloud-cli google-osconfig-agent
+sudo apt-get autoremove
+
+
+sudo fallocate -l 4G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+echo 'vm.swappiness=20' | sudo tee /etc/sysctl.d/99-swappiness.conf
+cat /proc/sys/vm/swappiness
+
+
+sudo apt install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+# Add the repository to Apt sources:
+sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/debian
+Suites: $(. /etc/os-release && echo "$VERSION_CODENAME")
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+
+sudo apt update
+
+sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+sudo apt install aria2 rsync sqlite3
+
+
+docker run --rm -it [vaultwarden-container-version] /vaultwarden hash
+
+
+sudo apt install python3-pip pipx
+pipx install visidata
+
+
+sudo timedatectl set-timezone Asia/Kolkata
+
+#cron jobs
+
+# Run backup script at 2:00 AM system time everyday
+0 2 * * * /home/sidhartha426/vaultwarden/backup.sh > /dev/null
+
+# Run system update script every Sunday at 3:00 AM system time
+0 3 * * 0 /home/sidhartha426/vaultwarden/update-system.sh > /dev/null
+
+
+
+
