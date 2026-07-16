@@ -9,7 +9,7 @@ set -e
 
 USER_NAME="sidhartha426"
 VAULTWARDEN_DIR="/home/${USER_NAME}/vaultwarden"
-LOG_FILE="${VAULTWARDEN_DIR}/update-system.log"
+LOG_FILE="${VAULTWARDEN_DIR}/cron-logs/update-system.log"
 
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 export DEBIAN_FRONTEND=noninteractive

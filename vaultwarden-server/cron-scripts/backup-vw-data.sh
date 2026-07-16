@@ -38,7 +38,7 @@ RCLONE_DEST="/backups/vaultwarden"             # The destination path on the rem
 RETENTION_DAYS=5                              # How many days to keep old backups
 
 
-LOG_FILE="${DOCKER_DIR}/vw_backup.log"
+LOG_FILE="${DOCKER_DIR}/cron-logs/backup-vw-data.log"
 
 
 # Redirect all output to log file and stdout (Requires bash process substitution)

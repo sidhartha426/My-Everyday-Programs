@@ -32,23 +32,24 @@ sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin dock
 
 sudo apt install aria2 rsync sqlite3
 
-
-docker run --rm -it [vaultwarden-container-version] /vaultwarden hash
-
-
 sudo apt install python3-pip pipx
 pipx install visidata
 
 
 sudo timedatectl set-timezone Asia/Kolkata
 
+
+docker run --rm -it [vaultwarden-container-version] /vaultwarden hash
+
+
 #cron jobs
 
 # Run backup script at 2:00 AM system time everyday
-0 2 * * * /home/sidhartha426/vaultwarden/backup.sh > /dev/null
+0 2 * * * /home/sidhartha426/vaultwarden/cron-scripts/backup-vw-data.sh > /dev/null
 
 # Run system update script every Sunday at 3:00 AM system time
-0 3 * * 0 /home/sidhartha426/vaultwarden/update-system.sh > /dev/null
+0 3 * * 0 /home/sidhartha426/vaultwarden/cron-scripts/update-system.sh > /dev/null
+
 
 
 
