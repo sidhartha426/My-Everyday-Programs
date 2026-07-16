@@ -9,7 +9,18 @@ sudo mkswap /swapfile
 sudo swapon /swapfile
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 echo 'vm.swappiness=20' | sudo tee /etc/sysctl.d/99-swappiness.conf
+
+
+sudo bash -c 'cat > /etc/sysctl.d/10-caddy-udp.conf <<EOF
+net.core.rmem_max = 7500000
+net.core.wmem_max = 7500000
+EOF'
+
+cat /proc/sys/net/core/rmem_max 
+cat /proc/sys/net/core/wmem_max 
 cat /proc/sys/vm/swappiness
+
+
 
 
 sudo apt install ca-certificates curl
@@ -40,6 +51,16 @@ sudo timedatectl set-timezone Asia/Kolkata
 
 
 docker run --rm -it [vaultwarden-container-version] /vaultwarden hash
+
+docker logs -f <container>
+
+docker inspect -f '{{.Config.StopTimeout}}' <your_container_name>
+
+journalctl --list-boots | awk '$1 == "-1"'
+
+uptime -s
+uptime -p
+uptime
 
 
 #cron jobs
