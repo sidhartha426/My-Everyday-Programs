@@ -54,15 +54,17 @@ echo "========================================================"
 mkdir -p "${STAGE_DIR}/vw-data"
 mkdir -p "$ARCHIVE_DIR"
 
-# 1. Hot Sync (Bulk of the work, zero downtime)
-echo "[1/8] Pre-syncing data (Hot)..."
+echo "[1/9] Deleting empty attachments file..."
+find ${VW_DATA_DIR}/attachments -mindepth 1 -type d -empty -delete
+
+
+# Hot Sync (Bulk of the work, zero downtime)
+echo "[2/9] Pre-syncing data (Hot)..."
 rsync -a --delete "${VW_DATA_DIR}/" "${STAGE_DIR}/vw-data/"
 
-# 2. Stop Container (State tracking applied)
+# Stop Container (State tracking applied)
 cd "$DOCKER_DIR"
 CONTAINERS_WERE_RUNNING=0
-
-
 
 
 # Safely check if any containers in this project are currently running
@@ -70,18 +72,15 @@ RUNNING_SERVICES=$(docker compose ps --status running -q || true)
 
 if [ -n "$RUNNING_SERVICES" ]; then
     CONTAINERS_WERE_RUNNING=1
-    echo "[2/8] Stopping containers..."
+    echo "[3/9] Stopping containers..."
     docker compose stop
 else
-    echo "[2/8] Containers already stopped. Skipping stop..."
+    echo "[3/9] Containers already stopped. Skipping stop..."
 fi
 
 
 
-
-
-
-echo "[3/8] Running database integrity check..."
+echo "[4/9] Running database integrity check..."
 INTEGRITY=$(sqlite3 "$DB_FILE" "PRAGMA integrity_check;")
 
 # 2. Evaluate the Check
@@ -91,45 +90,36 @@ if [ "$INTEGRITY" != "ok" ]; then
     exit 1
 fi
 
-echo "[4/8] Integrity check passed (Status: ok). Proceeding with cleanup..."
+echo "[5/9] Integrity check passed (Status: ok). Proceeding with cleanup..."
 
 # 3. Prune the Web Vault Devices
 DELETED_COUNT=$(sqlite3 "$DB_FILE" "DELETE FROM devices WHERE atype IN (9, 10, 11, 12, 14, 17); SELECT changes();")
 
-echo "[4/8] Successfully pruned $DELETED_COUNT orphaned Web Vault sessions."
 
-
-
-
+echo "[5/9] Successfully pruned $DELETED_COUNT orphaned Web Vault sessions."
 
 
 # 3. Cold Sync (Captures the final bits, takes milliseconds)
-echo "[5/8] Final sync (Cold)..."
+echo "[6/9] Final sync (Cold)..."
 rsync -a --delete "${VW_DATA_DIR}/" "${STAGE_DIR}/vw-data/"
-
-
-
 
 
 # 4. Resume Operations
 if [ "$CONTAINERS_WERE_RUNNING" -eq 1 ]; then
-    echo "[6/8] Restarting containers..."
+    echo "[7/9] Restarting containers..."
     docker compose start
 else
-    echo "[6/8] Containers were not running initially. Skipping start..."
+    echo "[7/9] Containers were not running initially. Skipping start..."
 fi
 
 
-
-
 # 5. Compress
-echo "[7/8] Compressing archive..."
+echo "[8/9] Compressing archive..."
 tar -czf "$ARCHIVE_PATH" -C "$STAGE_DIR" .
 
 # 6. Upload & Cleanup
-echo "[8/8] Uploading to rclone: ${RCLONE_REMOTE}..."
+echo "[9/9] Uploading to rclone: ${RCLONE_REMOTE}..."
 rclone copy "$ARCHIVE_PATH" "${RCLONE_REMOTE}:${RCLONE_DEST}"
-
 
 
 echo "Cleaning up remote backups older than ${RETENTION_DAYS} days..."

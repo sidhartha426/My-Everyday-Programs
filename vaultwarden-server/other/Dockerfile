@@ -1,6 +1,7 @@
 FROM caddy:2.11.4-builder-alpine AS builder
 
 RUN xcaddy build \
+    --with github.com/ueffel/caddy-brotli \
     --with github.com/caddy-dns/porkbun
 
 FROM caddy:2.11.4-alpine

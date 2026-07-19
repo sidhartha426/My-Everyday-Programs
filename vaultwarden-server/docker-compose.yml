@@ -8,6 +8,7 @@ services:
   vaultwarden:
     image: vaultwarden/server:1.36.0-alpine
     container_name: vaultwarden
+    user: "1000:1003"
     restart: always
     logging: *default-logging
     stop_grace_period: 180s
@@ -20,9 +21,16 @@ services:
       - IP_HEADER=X-Forwarded-For
       - ORG_CREATION_USERS=all
       - TZ=Asia/Kolkata
+      - ICON_CACHE_FOLDER=/data-t/icon_cache
+      - TEMPLATES_FOLDER=/data-t/templates
+      - TMP_FOLDER=/data-t/tmp
     
     volumes:
       - ./vw-data:/data
+      - ./vw-file/icon_cache:/data-t/icon_cache
+      - ./vw-file/templates:/data-t/templates
+      - ./vw-file/tmp:/data-t/tmp
+       
     networks:
       - vault_network
     deploy:
