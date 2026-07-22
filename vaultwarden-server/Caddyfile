@@ -1,4 +1,5 @@
-{
+{   
+	https_port {$HTTPS_PORT}
 	auto_https disable_redirects
 }
 
@@ -41,7 +42,7 @@
 	# Vaultwarden version 1.30.0+ natively handles WebSockets on port 80.
 	# Caddy v2 proxies WebSockets automatically, so no extra config is needed here.
 
-	reverse_proxy vaultwarden:80 {
+	reverse_proxy {$APP_UPSTREAM} {
 		flush_interval -1
 	}
 }

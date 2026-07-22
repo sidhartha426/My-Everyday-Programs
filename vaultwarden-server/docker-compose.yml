@@ -8,7 +8,7 @@ services:
   vaultwarden:
     image: vaultwarden/server:1.36.0-alpine
     container_name: vaultwarden
-    user: "1000:1003"
+    user: "${HOST_UID}:${HOST_GID}"
     restart: always
     logging: *default-logging
     stop_grace_period: 180s
@@ -20,16 +20,17 @@ services:
       - ENABLE_DB_WAL=true
       - IP_HEADER=X-Forwarded-For
       - ORG_CREATION_USERS=all
+      - ROCKET_PORT=${ROCKET_PORT}
       - TZ=Asia/Kolkata
       - ICON_CACHE_FOLDER=/data-t/icon_cache
       - TEMPLATES_FOLDER=/data-t/templates
       - TMP_FOLDER=/data-t/tmp
     
     volumes:
-      - ./vw-data:/data
-      - ./vw-file/icon_cache:/data-t/icon_cache
-      - ./vw-file/templates:/data-t/templates
-      - ./vw-file/tmp:/data-t/tmp
+      - ./vw-data:/data:Z
+      - ./vw-file/icon_cache:/data-t/icon_cache:Z
+      - ./vw-file/templates:/data-t/templates:Z
+      - ./vw-file/tmp:/data-t/tmp:Z
        
     networks:
       - vault_network
@@ -37,9 +38,13 @@ services:
       resources:
         limits:
           memory: 512M
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:80/alive"]
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:${ROCKET_PORT}/alive"]
       interval: 60s
       timeout: 10s
       retries: 3
@@ -56,13 +61,15 @@ services:
     stop_grace_period: 60s
     
     ports:
-      - "${HTTPS_PORT}:443"
+      - "${HTTPS_PORT}:${HTTPS_PORT}"
     environment:
       - DOMAIN=${DOMAIN}
       - EMAIL=${EMAIL}
       - PORKBUN_API_KEY=${PORKBUN_API_KEY}
       - PORKBUN_API_SECRET_KEY=${PORKBUN_API_SECRET_KEY}
-      - TZ=Asia/Kolkata 
+      - HTTPS_PORT=${HTTPS_PORT}
+      - APP_UPSTREAM=vaultwarden:${ROCKET_PORT}
+      - TZ=Asia/Kolkata
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
@@ -73,7 +80,11 @@ services:
       resources:
         limits:
           memory: 256M
-    
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+
     depends_on:
       vaultwarden:
         condition: service_healthy
