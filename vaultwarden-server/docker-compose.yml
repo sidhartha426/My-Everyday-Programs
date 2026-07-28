@@ -1,3 +1,5 @@
+name: fk-vault
+
 x-logging: &default-logging
   driver: "json-file"
   options:
@@ -7,7 +9,7 @@ x-logging: &default-logging
 services:
   vaultwarden:
     image: vaultwarden/server:1.36.0-alpine
-    container_name: vaultwarden
+    container_name: ${COMPOSE_PROJECT_NAME}-vaultwarden
     user: "${HOST_UID}:${HOST_GID}"
     restart: always
     logging: *default-logging
@@ -55,7 +57,7 @@ services:
   
   caddy:
     image: ghcr.io/sidhartha426/caddy:2.11.4-porkbun-alpine
-    container_name: caddy
+    container_name: ${COMPOSE_PROJECT_NAME}-caddy
     restart: always
     logging: *default-logging
     stop_grace_period: 60s
@@ -72,8 +74,8 @@ services:
       - TZ=Asia/Kolkata
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
+      - fk-vault-caddy_data:/data
+      - fk-vault-caddy_config:/config
     networks:
       - vault_network
     deploy:
@@ -90,8 +92,8 @@ services:
         condition: service_healthy
 
 volumes:
-  caddy_data:
-  caddy_config:
+  fk-vault-caddy_data:
+  fk-vault-caddy_config:
 
 networks:
   vault_network:
