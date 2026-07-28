@@ -54,7 +54,7 @@ services:
 
   
   caddy:
-    image: caddy:2.11.4-alpine-porkbun
+    image: ghcr.io/sidhartha426/caddy:2.11.4-porkbun-alpine
     container_name: caddy
     restart: always
     logging: *default-logging

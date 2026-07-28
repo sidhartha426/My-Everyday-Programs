@@ -1,4 +1,4 @@
-{   
+{
 	https_port {$HTTPS_PORT}
 	auto_https disable_redirects
 }
