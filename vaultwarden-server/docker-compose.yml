@@ -8,7 +8,7 @@ x-logging: &default-logging
 
 services:
   vaultwarden:
-    image: vaultwarden/server:1.36.0-alpine
+    image: vaultwarden/server:1.37.1-alpine
     container_name: ${COMPOSE_PROJECT_NAME}-vaultwarden
     user: "${HOST_UID}:${HOST_GID}"
     restart: always
@@ -56,7 +56,7 @@ services:
 
   
   caddy:
-    image: ghcr.io/sidhartha426/caddy:2.11.4-porkbun-alpine
+    image: ghcr.io/sidhartha426/caddy:2.11.4-cloudflare-alpine
     container_name: ${COMPOSE_PROJECT_NAME}-caddy
     restart: always
     logging: *default-logging
@@ -67,8 +67,7 @@ services:
     environment:
       - DOMAIN=${DOMAIN}
       - EMAIL=${EMAIL}
-      - PORKBUN_API_KEY=${PORKBUN_API_KEY}
-      - PORKBUN_API_SECRET_KEY=${PORKBUN_API_SECRET_KEY}
+      - CLOUDFLARE_API_KEY=${CLOUDFLARE_API_KEY}
       - HTTPS_PORT=${HTTPS_PORT}
       - APP_UPSTREAM=vaultwarden:${ROCKET_PORT}
       - TZ=Asia/Kolkata

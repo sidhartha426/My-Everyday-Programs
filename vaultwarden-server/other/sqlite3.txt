@@ -4,4 +4,8 @@ sqlite3 vw-data/db.sqlite3
 
 PRAGMA integrity_check;
 
-SELECT uuid,name,atype FROM devices;
+SELECT uuid,name,atype FROM devices ORDER BY atype ASC;
+
+DELETE FROM devices WHERE atype IN (9, 10, 11, 12, 14, 17); SELECT changes();
+
+DELETE FROM devices WHERE atype IN (2, 3); SELECT changes();
