@@ -12,10 +12,11 @@ fi
 echo "🔍 Scanning for all Docker Compose projects..."
 
 # 2. Query ALL containers system-wide that belong to a compose project
-# We pull specific fields and sort them so containers from the same project are grouped together.
+# By putting {{.Names}} immediately after the project label, `sort` will automatically
+# sort alphabetically by Project Name, and then alphabetically by Container Name.
 docker ps -a \
     --filter "label=com.docker.compose.project" \
-    --format '{{.Label "com.docker.compose.project"}}\t{{.ID}}\t{{.Names}}\t{{.State}}\t{{.Status}}' | 
+    --format '{{.Label "com.docker.compose.project"}}\t{{.Names}}\t{{.ID}}\t{{.State}}\t{{.Status}}' | 
 sort | 
 awk -F'\t' '
 BEGIN {
@@ -31,8 +32,8 @@ BEGIN {
 }
 {
     project = $1
-    id = $2
-    name = $3
+    name = $2
+    id = $3
     state = $4
     status = $5
     
@@ -75,4 +76,3 @@ END {
     }
 }
 '
-

@@ -11,7 +11,7 @@ services:
     image: vaultwarden/server:1.37.1-alpine
     container_name: ${COMPOSE_PROJECT_NAME}-vaultwarden
     user: "${HOST_UID}:${HOST_GID}"
-    restart: always
+    restart: unless-stopped
     logging: *default-logging
     stop_grace_period: 180s
     
@@ -19,15 +19,31 @@ services:
       - DOMAIN=${DOMAIN}:${HTTPS_PORT}
       - ADMIN_TOKEN=${ADMIN_TOKEN}
       - SIGNUPS_ALLOWED=${SIGNUPS_ALLOWED}
+      - SIGNUPS_VERIFY=${SIGNUPS_VERIFY}
+      - INVITATION_ORG_NAME=${INVITATION_ORG_NAME}
+
       - ENABLE_DB_WAL=true
       - IP_HEADER=X-Forwarded-For
       - ORG_CREATION_USERS=all
       - ROCKET_PORT=${ROCKET_PORT}
       - TZ=Asia/Kolkata
+
       - ICON_CACHE_FOLDER=/data-t/icon_cache
       - TEMPLATES_FOLDER=/data-t/templates
       - TMP_FOLDER=/data-t/tmp
-    
+
+      - SMTP_FROM=${SMTP_FROM}
+      - SMTP_FROM_NAME=${SMTP_FROM_NAME}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_SECURITY=${SMTP_SECURITY}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_AUTH_MECHANISM=${SMTP_AUTH_MECHANISM}
+      - SMTP_ACCEPT_INVALID_CERTS=${SMTP_ACCEPT_INVALID_CERTS}
+      - SMTP_ACCEPT_INVALID_HOSTNAMES=${SMTP_ACCEPT_INVALID_HOSTNAMES}
+      - SMTP_TIMEOUT=${SMTP_TIMEOUT}
+  
     volumes:
       - ./vw-data:/data:Z
       - ./vw-file/icon_cache:/data-t/icon_cache:Z
@@ -58,7 +74,7 @@ services:
   caddy:
     image: ghcr.io/sidhartha426/caddy:2.11.4-cloudflare-alpine
     container_name: ${COMPOSE_PROJECT_NAME}-caddy
-    restart: always
+    restart: unless-stopped
     logging: *default-logging
     stop_grace_period: 60s
     
@@ -85,6 +101,13 @@ services:
       - ALL
     cap_add:
       - NET_BIND_SERVICE
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:2019/metrics || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+      start_interval: 1s
 
     depends_on:
       vaultwarden:

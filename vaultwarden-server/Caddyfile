@@ -13,10 +13,8 @@
 		# the staging server so you don't get rate-limited during testing.
 		# Once testing is done, comment it out and restart Caddy.
 		# ca https://acme-staging-v02.api.letsencrypt.org/directory
-		dns porkbun {
-			api_key {env.PORKBUN_API_KEY}
-			api_secret_key {env.PORKBUN_API_SECRET_KEY}
-		}
+		dns cloudflare {env.CLOUDFLARE_API_KEY}
+    
 	}
 
 	# Compress responses to save bandwidth on the free tier
