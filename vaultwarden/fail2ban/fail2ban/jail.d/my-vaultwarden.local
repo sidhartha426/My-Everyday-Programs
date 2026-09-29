@@ -9,6 +9,8 @@ chain   = DOCKER-USER
 action  = iptables-multiport[name=%(__name__)s, port="%(port)s", protocol="tcp", chain="%(chain)s"]
           ntfy[name=%(__name__)s]
           
-maxretry = 3
-bantime  = 4h      
+maxretry = 5
 findtime = 4h
+bantime = 1w
+bantime.increment = true      
+
