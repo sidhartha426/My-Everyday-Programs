@@ -66,10 +66,8 @@ uptime
 #cron jobs
 
 # Run backup script at 2:00 AM system time everyday
-0 2 * * * /home/sidhartha426/vaultwarden/cron-scripts/backup-vw-data.sh > /dev/null
+0 2 * * * /home/sidhartha426/vaultwarden/cron/scripts/backup-my-vaultwarden.sh > /dev/null
 
-# Run system update script every Sunday at 3:00 AM system time
-0 3 * * 0 /home/sidhartha426/vaultwarden/cron-scripts/update-system.sh > /dev/null
 
 
 

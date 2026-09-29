@@ -1,0 +1,18 @@
+sqlite3 vw-data/db.sqlite3
+
+.system clear
+
+PRAGMA integrity_check;
+
+SELECT uuid,name,atype FROM devices ORDER BY atype ASC;
+
+
+SELECT users.email AS email,devices.uuid AS uuid,devices.name AS name, devices.atype AS atype 
+FROM devices JOIN users ON devices.user_uuid = users.uuid
+ORDER BY users.name ASC, devices.atype ASC;
+
+DELETE FROM devices WHERE uuid = '63457c59-cdbc-483c-9f7f-559766146c6b'; SELECT changes();
+
+DELETE FROM devices WHERE atype IN (9, 10, 11, 12, 14, 17); SELECT changes();
+
+DELETE FROM devices WHERE atype IN (2, 3); SELECT changes();

@@ -1,0 +1,204 @@
+name: my-vaultwarden
+
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  vaultwarden:
+    image: vaultwarden/server:1.37.2-alpine
+    container_name: ${COMPOSE_PROJECT_NAME}-vaultwarden
+    restart: unless-stopped
+    logging: *default-logging
+    stop_grace_period: 180s
+    user: "${HOST_UID}:${HOST_GID}"
+    
+    environment:
+      - DOMAIN=${DOMAIN}:${HTTPS_PORT}
+      - ADMIN_TOKEN=${ADMIN_TOKEN}
+      - SIGNUPS_ALLOWED=${SIGNUPS_ALLOWED}
+      - SIGNUPS_VERIFY=${SIGNUPS_VERIFY}
+      - INVITATION_ORG_NAME=${INVITATION_ORG_NAME}
+
+      - ENABLE_DB_WAL=true
+      - IP_HEADER=X-Forwarded-For
+      - ORG_CREATION_USERS=all
+      - ROCKET_PORT=${ROCKET_PORT}
+      - TZ=Asia/Kolkata
+
+      - LOG_FILE=/logs/vaultwarden.log
+      - EXTENDED_LOGGING=true
+      - LOG_LEVEL=warn
+
+      - ICON_CACHE_FOLDER=/data-t/icon_cache
+      - TEMPLATES_FOLDER=/data-t/templates
+      - TMP_FOLDER=/data-t/tmp
+
+      - PUSH_ENABLED=${PUSH_ENABLED}
+      - PUSH_INSTALLATION_ID=${PUSH_INSTALLATION_ID}
+      - PUSH_INSTALLATION_KEY=${PUSH_INSTALLATION_KEY}
+
+      - PUSH_RELAY_URI=${PUSH_RELAY_URI}
+      - PUSH_IDENTITY_URI=${PUSH_IDENTITY_URI}
+
+
+      - DUO_IKEY=${DUO_IKEY}
+      - DUO_SKEY=${DUO_SKEY}
+      - DUO_HOST=${DUO_HOST}
+
+
+      - SMTP_FROM=${SMTP_FROM}
+      - SMTP_FROM_NAME=${SMTP_FROM_NAME}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_SECURITY=${SMTP_SECURITY}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_AUTH_MECHANISM=${SMTP_AUTH_MECHANISM}
+      - SMTP_ACCEPT_INVALID_CERTS=${SMTP_ACCEPT_INVALID_CERTS}
+      - SMTP_ACCEPT_INVALID_HOSTNAMES=${SMTP_ACCEPT_INVALID_HOSTNAMES}
+      - SMTP_TIMEOUT=${SMTP_TIMEOUT}
+  
+    volumes:
+      - ./vaultwarden/data:/data:Z
+      - ./vaultwarden/file/icon_cache:/data-t/icon_cache:Z
+      - ./vaultwarden/file/templates:/data-t/templates:Z
+      - ./vaultwarden/file/tmp:/data-t/tmp:Z
+      - ./vaultwarden/logs:/logs:Z
+       
+    networks:
+      - my-vaultwarden-network
+
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:${ROCKET_PORT}/alive"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+      start_interval: 2s
+  
+  caddy:
+    image: ghcr.io/sidhartha426/caddy:2.11.4-desec-alpine
+    container_name: ${COMPOSE_PROJECT_NAME}-caddy
+    restart: unless-stopped
+    logging: *default-logging
+    stop_grace_period: 60s
+    user: "${HOST_UID}:${HOST_GID}"
+    
+    ports:
+      - "${HTTPS_PORT}:${HTTPS_PORT}/tcp"
+      - "${HTTPS_PORT}:${HTTPS_PORT}/udp"
+    environment:
+      - DOMAIN=${DOMAIN}
+      - EMAIL=${EMAIL}
+      - DESEC_API_KEY=${DESEC_API_KEY}
+      - HTTPS_PORT=${HTTPS_PORT}
+      - APP_UPSTREAM=vaultwarden:${ROCKET_PORT}
+      - TZ=Asia/Kolkata
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy/data:/data:Z
+      - ./caddy/config:/config:Z
+    networks:
+      - my-vaultwarden-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+
+    depends_on:
+      vaultwarden:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:2019/metrics || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+      start_interval: 1s
+
+  fail2ban:
+    image: lscr.io/linuxserver/fail2ban:latest
+    container_name: ${COMPOSE_PROJECT_NAME}-fail2ban
+    restart: unless-stopped
+    logging: *default-logging
+    stop_grace_period: 30s
+
+    environment:
+      - PUID=${HOST_UID}
+      - PGID=${HOST_GID}
+      - TZ=Asia/Kolkata
+      - VERBOSITY=-vv
+    volumes:
+      - ./fail2ban:/config
+      - ./vaultwarden/logs:/vw-logs:ro
+
+    network_mode: host
+
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+
+    depends_on:
+      vaultwarden:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD-SHELL", "fail2ban-client ping > /dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+      start_interval: 1s
+
+  vw-logrotate:
+    image: alpine:3.23
+    container_name: ${COMPOSE_PROJECT_NAME}-vw-logrotate
+    restart: unless-stopped
+    logging: *default-logging
+    stop_grace_period: 30s
+
+
+    environment:
+      - TZ=Asia/Kolkata
+    volumes:
+      - ./vaultwarden/logs:/logs
+    networks:
+      - my-vaultwarden-network
+
+    command: >
+      sh -c "apk add --no-cache logrotate tini &&
+      echo '/logs/vaultwarden.log { weekly rotate 4 missingok notifempty copytruncate }' > /etc/logrotate.d/vaultwarden &&
+      exec tini -- crond -f -L /dev/stdout"
+
+    depends_on:
+      vaultwarden:
+        condition: service_healthy  
+    healthcheck:
+      test: ["CMD", "pidof", "crond"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+      start_interval: 1s
+
+
+networks:
+  my-vaultwarden-network:
+    name: my-vaultwarden-network
+    driver: bridge

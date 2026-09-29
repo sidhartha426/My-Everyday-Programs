@@ -6,127 +6,141 @@
 # Fail completely if any command fails, a variable is unset, or a pipe fails
 set -euo pipefail
 
+START_TIME=$(date +%s)
+
 # ==============================================================================
 # CRON ENVIRONMENT FIXES
 # ==============================================================================
-# 1. Ensure Cron knows where to find binaries (docker, rclone, rsync, tar, etc.)
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-
-# 2. Force Rclone to find your non-root configuration file
-export RCLONE_CONFIG="/home/sidhartha426/.config/rclone/rclone.conf"
 
 # ==============================================================================
 # CONFIGURATION
 # ==============================================================================
-USER_NAME="sidhartha426"
-DOCKER_DIR="/home/${USER_NAME}/vaultwarden"    # Directory containing docker-compose.yml
-VW_DATA_DIR="${DOCKER_DIR}/vw-data"            # Vaultwarden mounted data folder
+USER_NAME=""
+DOCKER_DIR="/home/${USER_NAME}/my-vaultwarden"
+VW_DATA_DIR="${DOCKER_DIR}/vaultwarden/data"
 DB_FILE="${VW_DATA_DIR}/db.sqlite3"
 
-
-# Staging & Archiving (User-specific to avoid /tmp permission collisions)
+# Staging & Archiving
 STAGE_DIR="/tmp/${USER_NAME}_vw_backup_staging"
 ARCHIVE_DIR="/tmp/${USER_NAME}_vw_archives"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-ARCHIVE_NAME="vw_backup_${TIMESTAMP}.tar.gz"
+ARCHIVE_NAME="my_vaultwarden_backup_${TIMESTAMP}.tar.zst"
 ARCHIVE_PATH="${ARCHIVE_DIR}/${ARCHIVE_NAME}"
 
-
 # Rclone Settings
-RCLONE_REMOTE="gdrive-crypt-swain.nana66"      # The name of your rclone remote
-RCLONE_DEST="/backups/vaultwarden"             # The destination path on the remote
-RETENTION_DAYS=5                              # How many days to keep old backups
+export RCLONE_CONFIG="/home/${USER_NAME}/my-vaultwarden/rclone/rclone.conf"
+RCLONE_REMOTE="my-vaultwarden-rclone-crypt"
+RCLONE_DEST="/"
+RETENTION_DAYS=5
 
+# Notification Settings (ntfy)
+NTFY_URL="" 
+NTFY_TOKEN=""     
 
-LOG_FILE="${DOCKER_DIR}/cron-logs/backup-vw-data.log"
+LOG_DIR="${DOCKER_DIR}/cron/logs"
+LOG_FILE="${LOG_DIR}/backup-my-vaultwarden.log"
 
-
-# Redirect all output to log file and stdout (Requires bash process substitution)
-#exec > >(tee "$LOG_FILE") 2>&1  #disable to prevent race condition
-
+mkdir -p "$LOG_DIR"
 exec > "$LOG_FILE" 2>&1
 
 echo "========================================================"
 echo "Backup Started: ${TIMESTAMP}"
 echo "========================================================"
 
-# Prepare temporary directories
-mkdir -p "${STAGE_DIR}/vw-data"
+mkdir -p "${STAGE_DIR}/my-vaultwarden"
 mkdir -p "$ARCHIVE_DIR"
 
 echo "[1/9] Deleting empty attachments file..."
-find ${VW_DATA_DIR}/attachments -mindepth 1 -type d -empty -delete
+find "${VW_DATA_DIR}/attachments" -mindepth 1 -type d -empty -delete
 
-
-# Hot Sync (Bulk of the work, zero downtime)
+# Hot Sync
 echo "[2/9] Pre-syncing data (Hot)..."
-rsync -a --delete "${VW_DATA_DIR}/" "${STAGE_DIR}/vw-data/"
+rsync -a --delete --exclude 'cron/logs' "${DOCKER_DIR}/" "${STAGE_DIR}/my-vaultwarden/"
 
-# Stop Container (State tracking applied)
+# Stop Container
 cd "$DOCKER_DIR"
 CONTAINERS_WERE_RUNNING=0
-
-
-# Safely check if any containers in this project are currently running
 RUNNING_SERVICES=$(docker compose ps --status running -q || true)
 
 if [ -n "$RUNNING_SERVICES" ]; then
     CONTAINERS_WERE_RUNNING=1
     echo "[3/9] Stopping containers..."
-    docker compose stop
+    docker compose down
 else
     echo "[3/9] Containers already stopped. Skipping stop..."
 fi
 
-
-
 echo "[4/9] Running database integrity check..."
 INTEGRITY=$(sqlite3 "$DB_FILE" "PRAGMA integrity_check;")
 
-# 2. Evaluate the Check
 if [ "$INTEGRITY" != "ok" ]; then
     echo "CRITICAL ERROR: Database corruption detected! Aborting backup."
     echo "Details: $INTEGRITY"
+
+    if [ "$CONTAINERS_WERE_RUNNING" -eq 1 ]; then
+        docker compose up -d
+    fi
+
+    # Failure alert before exit
+    curl -fsS \
+        -H "Authorization: Bearer ${NTFY_TOKEN}" \
+        -H "Title: Vaultwarden Backup FAILED" \
+        -H "Priority: urgent" \
+        -H "Tags: warning,rotating_light" \
+        -d "Database integrity check failed: ${INTEGRITY}. Containers restored." \
+        "$NTFY_URL" || true
+
     exit 1
 fi
 
 echo "[5/9] Integrity check passed (Status: ok). Proceeding with cleanup..."
 
-# 3. Prune the Web Vault Devices
 DELETED_COUNT=$(sqlite3 "$DB_FILE" "DELETE FROM devices WHERE atype IN (9, 10, 11, 12, 14, 17); SELECT changes();")
+echo "Successfully pruned $DELETED_COUNT orphaned Web Vault sessions."
 
-
-echo "[5/9] Successfully pruned $DELETED_COUNT orphaned Web Vault sessions."
-
-
-# 3. Cold Sync (Captures the final bits, takes milliseconds)
+# Cold Sync
 echo "[6/9] Final sync (Cold)..."
-rsync -a --delete "${VW_DATA_DIR}/" "${STAGE_DIR}/vw-data/"
+rsync -a --delete --exclude 'cron/logs' "${DOCKER_DIR}/" "${STAGE_DIR}/my-vaultwarden/"
 
-
-# 4. Resume Operations
+# Resume Operations
 if [ "$CONTAINERS_WERE_RUNNING" -eq 1 ]; then
     echo "[7/9] Restarting containers..."
-    docker compose start
+    docker compose up -d
 else
     echo "[7/9] Containers were not running initially. Skipping start..."
 fi
 
-
-# 5. Compress
+# Compress
 echo "[8/9] Compressing archive..."
-tar -czf "$ARCHIVE_PATH" -C "$STAGE_DIR" .
+nice -n 19 ionice -c2 -n7 tar -I 'zstd --single-thread -9' --exclude="./my-vaultwarden/cron/logs" -cf "$ARCHIVE_PATH" -C "$STAGE_DIR" .
 
-# 6. Upload & Cleanup
+# Gather file size before clearing local files
+ARCHIVE_SIZE=$(du -h "$ARCHIVE_PATH" | cut -f1)
+
+# Upload & Cleanup
 echo "[9/9] Uploading to rclone: ${RCLONE_REMOTE}..."
 rclone copy "$ARCHIVE_PATH" "${RCLONE_REMOTE}:${RCLONE_DEST}"
 
-
 echo "Cleaning up remote backups older than ${RETENTION_DAYS} days..."
-rclone delete "${RCLONE_REMOTE}:${RCLONE_DEST}" --min-age ${RETENTION_DAYS}d
+rclone delete "${RCLONE_REMOTE}:${RCLONE_DEST}" --min-age "${RETENTION_DAYS}d" --drive-use-trash=false
 
 echo "Cleaning up local staging and archive files..."
 rm -rf "$STAGE_DIR" "$ARCHIVE_DIR"
 
-echo "Backup Successfully Completed: ${TIMESTAMP}"
+# Execution metadata
+END_TIME=$(date +%s)
+DURATION=$((END_TIME - START_TIME))
+
+echo "Backup Successfully Completed: $(date +"%Y-%m-%d %H:%M:%S")"
+echo "Duration: ${DURATION}s | Archive Size: ${ARCHIVE_SIZE}"
 echo "========================================================"
+
+# Dispatch ntfy success notification
+curl -fsS \
+    -H "Authorization: Bearer ${NTFY_TOKEN}" \
+    -H "Title: my-vaultwarden Backup Successful" \
+    -H "Priority: default" \
+    -H "Tags: white_check_mark,lock,package" \
+    -d "Archive: ${ARCHIVE_NAME} (${ARCHIVE_SIZE}) uploaded to ${RCLONE_REMOTE}. Completed in ${DURATION}s." \
+    "$NTFY_URL"

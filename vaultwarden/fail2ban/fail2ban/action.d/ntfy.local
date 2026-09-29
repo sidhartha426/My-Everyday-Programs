@@ -1,0 +1,18 @@
+[Definition]
+# Leave empty to avoid container restart spam
+actionstart = 
+actionstop = 
+actioncheck = 
+
+# Added the Authorization header mapped to the token variable below
+actionban = /usr/bin/curl -H "Title: Fail2ban Banned IP" -H "Tags: skull" -H "Priority: high" -H "Authorization: Bearer <ntfy_token>" -d "Banned <ip> in jail <name> after <failures> attempts." "<ntfy_url>"
+
+actionunban = /usr/bin/curl -H "Title: Fail2ban Unbanned IP" -H "Tags: white_check_mark" -H "Authorization: Bearer <ntfy_token>" -d "Unbanned <ip> in jail <name>." "<ntfy_url>"
+
+[Init]
+# Replace with your private server URL and topic
+ntfy_url = 
+
+# Replace with your actual ntfy access token (usually starts with tk_)
+ntfy_token = 
+name = default

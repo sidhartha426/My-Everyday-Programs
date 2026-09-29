@@ -1,0 +1,14 @@
+[my-vaultwarden]
+enabled = true
+filter  = vaultwarden
+logpath = /vw-logs/vaultwarden.log
+port    = 8080
+chain   = DOCKER-USER
+
+# Executes the Docker firewall block, THEN executes your ntfy action with the exact jail name
+action  = iptables-multiport[name=%(__name__)s, port="%(port)s", protocol="tcp", chain="%(chain)s"]
+          ntfy[name=%(__name__)s]
+          
+maxretry = 3
+bantime  = 4h      
+findtime = 4h

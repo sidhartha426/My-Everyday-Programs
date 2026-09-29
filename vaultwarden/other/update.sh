@@ -3,8 +3,8 @@
 # --- YOUR DETAILS HERE ---
 API_KEY=
 SECRET_KEY=
-DOMAIN="sid426.dev"
-SUBDOMAIN="fk-vault" # Just the subdomain, not the full URL
+DOMAIN=""
+SUBDOMAIN="" # Just the subdomain, not the full URL
 # -------------------------
 
 # 1. Get current public IP of this VM
